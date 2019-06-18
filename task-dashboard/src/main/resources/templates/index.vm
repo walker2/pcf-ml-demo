@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Neural network tasks dashboard</title>
+<link href="/static/favicon.ico" type="image/x-icon" rel="shortcut icon">
+<link rel="stylesheet" href="/css/lux.min.css">
+<link rel="stylesheet" href="/css/toast.min.css">
+<link rel="stylesheet" href="/css/bootstrap-multiselect.css" type="text/css"/>
+<link rel=stylesheet href=https://cdn.jsdelivr.net/npm/pretty-print-json@0.1/dist/pretty-print-json.css>
+<style type="text/css">
+	.btnRun, .btnPause, .btnResume, .btnEdit {margin-right: 8px;}
+	.input-group {margin-bottom: 5px;}
+	.title {text-align:center; font-size:30px; margin-top:15px;}
+	.btnCreate {text-align:right; margin:5px 15px;}
+	.head {border:solid; border-color:#8080805c; border-width:1px;}
+	.line {
+	    border: 0;
+	    height: 1px;
+	    background-image: linear-gradient(to right, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.23), rgba(0, 0, 0, 0));
+	}
+	.collapse-row.collapsed + tr {
+		display: none;
+	}
+</style>
+</head>
+<body>
+
+	<div class="container-fluid" style="padding-top: 15px;">
+	    
+	    <div class="head">
+	    	<div class="title">Neural network tasks dashboard</div>
+	    	<hr class="line">
+	        <div class="btnCreate">
+				<button type="button" class="btn btn-primary" id="createBtn" data-toggle="modal">create</button>
+		    </div>
+		</div>
+
+		<div class="head table-responsive">
+			<table class="table table-bordered table-hover">
+				<thead class="thead-dark">
+					<tr class="active">
+						<th>id</th>
+						<th>name</th>
+						<th>type</th>
+						<th>status</th>
+						<th>desc</th>
+						<th>files</th>
+						<th>cron</th>
+                        <th>execution</th>
+
+						<!-- <th>interface</th> -->
+						<th style="text-align: center;">operation</th>
+					</tr>
+				</thead>
+				<tbody>
+					#foreach($task in $tasks)
+					<tr data-id="$task.id" data-toggle="collapse" data-target="#collapse_$task.id" class="clickable collapse-row collapsed">
+						<td>$task.id</td>
+						<td id="name_$task.id">$task.name</td>
+						<td id="type_$task.id">$task.type</td>
+						<td id="status_$task.id">$task.status</td>
+						<td id="desc_$task.id">$task.desc</td>
+						<td id="files_$task.id">
+                            #foreach($file in $task.files)
+                                $file
+                            #end
+                        </td>
+						<td id="cron_$task.id">$task.cronExp</td>
+                        <td id="exec_$task.id" class="execution">$task.execution</td>
+
+						<td style="text-align: center;">
+							<div class="btn-group text-center" role="group"
+								data-id="$task.id">
+								<button type="button" class="btn btn-outline-dark btnRun">runOnce</button>
+								<button type="button" class="btn btn-default btnPause">pause</button>
+								<button type="button" class="btn btn-default btnResume">resume</button>
+								<button type="button" class="btn btn-default btnEdit">edit</button>
+								<button type="button" class="btn btn-warning btnDelete">delete</button>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						#if($task.result != "")
+							<td colspan="8">
+								<pre id="collapse_$task.id" class="collapse">$task.result</pre>
+							</td>
+						#end
+					</tr>
+					#end
+
+
+				</tbody>
+			</table>
+		</div>
+		<div class="cal">
+		</div>
+
+		<div class="alert alert-light alert-dismissible fade show" role="alert">
+			<strong>Welcome!</strong> Here you can add new tasks and run existing ones. Click on the task to see result
+			<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+				<span aria-hidden="true">&times;</span>
+			</button>
+		</div>
+	</div>
+
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Create new task</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<form id="mainForm" action="">
+						<div>
+							<input type="hidden" class="form-control " id="jobId" name="jobId" />
+							<div class="form-group">
+								<label for="edit_name">Task name:</label><br>
+								<input type="text" name="name" class="form-control validate" id="edit_name" required autofocus/>
+							</div>
+							<div class="form-group">
+								<label for="task_type">Task type:</label><br>
+								<select id="task_type" name="type" class="form-control" data-size="10">
+									<option value=""></option>
+									<option value="RECOGNITION">RECOGNITION</option>
+									<option value="RELEARN">RELEARN</option>
+								</select>
+							</div>
+							<div class="form-group">
+								<label for="edit_desc">Description:</label><br>
+								<input type="text" name="desc" class="form-control validate" id="edit_desc"/>
+							</div>
+							<div class="form-group">
+								<label for="cronExp">Cron job:</label><br>
+								<input type="text" name="cronExp" class="form-control validate" id="cronExp"/>
+							</div>
+							<!--<div class="form-group"><label for="all_files">Files:</label><select id="all_files" name="files" class="form-control" multiple="multiple"></select></div>-->
+							<div id="option_choose"></div> 
+
+						</div>
+					</form>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+					<button type="button" class="btn btn-primary" id="save">Create</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+	<script type="text/javascript" src="/js/jquery.min.js"></script>
+	<script type="text/javascript" src="/js/bootstrap.min.js"></script>
+	<script type="text/javascript" src="/js/bootstrap-select.min.js"></script>
+	<script type="text/javascript" src="/js/toast.min.js"></script>
+	<script type="text/javascript" src="/js/bootstrap-multiselect.js"></script>
+	<script src=https://cdn.jsdelivr.net/npm/pretty-print-json@0.1/dist/pretty-print-json.min.js></script>
+	<script type="text/javascript" src="/js/index.js"></script>
+	<script>
+		var time = new Date().getTime();
+		$(document.body).bind("mousemove keypress", function(e) {
+			time = new Date().getTime();
+		});
+
+		function refresh() {
+			if(new Date().getTime() - time >= 60000) 
+				window.location.reload(true);
+			else 
+				setTimeout(refresh, 10000);
+		}
+
+		setTimeout(refresh, 10000);
+	</script>
+</body>
+</html>

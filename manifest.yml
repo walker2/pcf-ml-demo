@@ -1,0 +1,32 @@
+---
+applications:
+  - name: s3-manager 
+    memory: 512G
+    instances: 1
+    path: ./s3-manager/build
+  - name: task-dashboard
+    memory: 1G
+    instances: 2
+    path: ./task-dashboard/target
+    services:
+      - rabbitmq
+  - name: recognition-worker
+    memory: 256M
+    instances: 2
+    path: ./recognition-worker
+    no-route: true
+    health-check-type: process
+    services:
+      - rabbitmq
+    env:
+      TASK_QUEUE: job_queue.rpc.recognize
+  - name: relearn-worker
+    memory: 768M
+    instances: 5
+    path: ./relearn-worker
+    no-route: true
+    health-check-type: process
+    services:
+      - rabbitmq
+    env:
+      TASK_QUEUE: job_queue.rpc.relearn
